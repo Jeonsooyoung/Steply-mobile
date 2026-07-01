@@ -1,0 +1,8 @@
+<resources>
+    <style name="Theme.Steply" parent="@android:style/Theme.Material.Light.NoActionBar">
+        <item name="android:fontFamily">sans</item>
+        <item name="android:windowBackground">@color/steply_background</item>
+        <item name="android:colorAccent">@color/steply_primary</item>
+        <item name="android:windowLightStatusBar">true</item>
+    </style>
+</resources>
