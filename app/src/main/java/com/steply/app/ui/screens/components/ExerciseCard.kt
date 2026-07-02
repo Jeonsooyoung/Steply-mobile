@@ -18,7 +18,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.Color
 
 @Composable
 fun ExerciseCard(
@@ -38,7 +37,11 @@ fun ExerciseCard(
 
     SteplyCard(
         modifier = modifier.scale(scale),
-        containerColor = if (isCompleted) SteplyCompletedGreen else MaterialTheme.colorScheme.surface,
+        containerColor = if (isCompleted) {
+            MaterialTheme.colorScheme.primaryContainer
+        } else {
+            MaterialTheme.colorScheme.surface
+        },
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -60,7 +63,7 @@ fun ExerciseCard(
                 Icon(
                     imageVector = Icons.Default.CheckCircle,
                     contentDescription = "Completed",
-                    tint = SteplySuccessGreen,
+                    tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(SteplySizes.IconLarge),
                 )
             }
@@ -83,5 +86,3 @@ fun ExerciseCard(
         )
     }
 }
-
-private val SteplyCompletedGreen = Color(0xFFEAF7EF)

@@ -9,8 +9,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 
 @Composable
 fun ProfileAvatar(
@@ -29,9 +27,7 @@ fun ProfileAvatar(
         modifier = modifier
             .size(SteplySizes.Avatar)
             .background(
-                brush = Brush.linearGradient(
-                    colors = listOf(MaterialTheme.colorScheme.primary, SteplyAccentOrange),
-                ),
+                color = MaterialTheme.colorScheme.primary,
                 shape = CircleShape,
             ),
         contentAlignment = Alignment.Center,
@@ -39,7 +35,7 @@ fun ProfileAvatar(
         Text(
             text = initials,
             style = MaterialTheme.typography.titleLarge,
-            color = Color.White,
+            color = MaterialTheme.colorScheme.onPrimary,
         )
     }
 }

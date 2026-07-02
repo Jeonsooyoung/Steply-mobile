@@ -14,6 +14,7 @@ import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -55,6 +56,7 @@ fun CameraStreamPreview(
         PreviewView(context).apply {
             implementationMode = PreviewView.ImplementationMode.COMPATIBLE
             scaleType = PreviewView.ScaleType.FIT_CENTER
+            contentDescription = "Camera preview for PC streaming"
         }
     }
 
@@ -64,6 +66,11 @@ fun CameraStreamPreview(
             .aspectRatio(3f / 4f)
             .clip(RoundedCornerShape(SteplyCorners.Card))
             .background(androidx.compose.material3.MaterialTheme.colorScheme.surfaceVariant)
+            .border(
+                width = 1.dp,
+                color = androidx.compose.material3.MaterialTheme.colorScheme.outline.copy(alpha = 0.42f),
+                shape = RoundedCornerShape(SteplyCorners.Card),
+            )
             .padding(1.dp),
     ) {
         AndroidView(
@@ -118,7 +125,7 @@ fun CameraStreamPreview(
                                 } else if (activeStreamer != null && now - lastSendFailureReportedAt >= SEND_FAILURE_REPORT_INTERVAL_MS) {
                                     lastSendFailureReportedAt = now
                                     mainHandler.post {
-                                        currentOnError("Frame captured, but WebSocket is not ready to send yet.")
+                                        currentOnError("Frame captured, but the PC connection is not ready yet.")
                                     }
                                 }
                             }

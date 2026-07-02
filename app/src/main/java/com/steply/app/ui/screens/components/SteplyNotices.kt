@@ -11,13 +11,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.steply.app.ui.text.SteplyCopy
 
@@ -29,7 +29,7 @@ fun SafetyNoticeCard(
 ) {
     SteplyCard(
         modifier = modifier,
-        containerColor = SteplyNoticeAmber,
+        containerColor = MaterialTheme.colorScheme.tertiaryContainer,
     ) {
         NoticeRow(
             text = text,
@@ -50,8 +50,8 @@ fun WarmNoteSurface(
     Surface(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(SteplyCorners.Notice),
-        color = SteplyNoticeAmber,
-        contentColor = MaterialTheme.colorScheme.onSurface,
+        color = MaterialTheme.colorScheme.tertiaryContainer,
+        contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
     ) {
         NoticeRow(
             text = text,
@@ -84,7 +84,7 @@ fun LocalDataNoticeCard(
             Text(
                 text = text,
                 style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurface,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
     }
@@ -98,6 +98,7 @@ private fun NoticeRow(
     modifier: Modifier = Modifier,
     textStyleLarge: Boolean = false,
 ) {
+    val contentColor = LocalContentColor.current
     Row(
         modifier = modifier,
         horizontalArrangement = Arrangement.spacedBy(SteplySpacing.MediumGap),
@@ -106,7 +107,7 @@ private fun NoticeRow(
         Icon(
             imageVector = icon,
             contentDescription = null,
-            tint = SteplyWarmAmber,
+            tint = MaterialTheme.colorScheme.tertiary,
             modifier = Modifier.size(if (textStyleLarge) SteplySizes.ActionIcon else SteplySizes.IconMedium),
         )
         Column(verticalArrangement = Arrangement.spacedBy(SteplySpacing.ExtraSmallGap)) {
@@ -114,7 +115,7 @@ private fun NoticeRow(
                 Text(
                     text = it,
                     style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface,
+                    color = contentColor,
                 )
             }
             Text(
@@ -124,10 +125,8 @@ private fun NoticeRow(
                 } else {
                     MaterialTheme.typography.bodyMedium
                 },
-                color = MaterialTheme.colorScheme.onSurface,
+                color = contentColor,
             )
         }
     }
 }
-
-private val SteplyNoticeAmber = Color(0xFFFFF4E3)

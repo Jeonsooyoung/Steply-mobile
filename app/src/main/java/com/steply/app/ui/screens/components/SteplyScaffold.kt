@@ -10,10 +10,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.widthIn
@@ -57,6 +59,7 @@ fun SteplyScaffold(
 ) {
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
+        contentWindowInsets = WindowInsets.safeDrawing,
         topBar = {
             if (title != null || onBack != null) {
                 SteplyTopBar(
@@ -212,7 +215,11 @@ fun SteplyTopBar(
                     )
                 }
             }
-            Row(content = actions)
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(SteplySpacing.SmallGap),
+                verticalAlignment = Alignment.CenterVertically,
+                content = actions,
+            )
         }
     }
 }
@@ -224,6 +231,13 @@ fun SteplyScreenColumn(
     content: @Composable () -> Unit,
 ) {
     var visible by remember { mutableStateOf(false) }
+    val configuration = LocalConfiguration.current
+    val horizontalPadding = if (configuration.screenWidthDp < 360) {
+        16.dp
+    } else {
+        SteplySpacing.ScreenHorizontal
+    }
+
     LaunchedEffect(Unit) { visible = true }
 
     AnimatedVisibility(
@@ -243,10 +257,10 @@ fun SteplyScreenColumn(
                     .fillMaxWidth()
                     .verticalScroll(rememberScrollState())
                     .padding(
-                        start = SteplySpacing.ScreenHorizontal,
+                        start = horizontalPadding,
                         top = SteplySpacing.ScreenVertical,
-                        end = SteplySpacing.ScreenHorizontal,
-                        bottom = SteplySpacing.ScreenVertical + 72.dp,
+                        end = horizontalPadding,
+                        bottom = SteplySpacing.ScreenVertical + 32.dp,
                     ),
                 verticalArrangement = Arrangement.spacedBy(SteplySpacing.SectionGap),
             ) {

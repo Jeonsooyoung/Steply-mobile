@@ -180,7 +180,7 @@ private fun SteplyLoadingScreen() {
         contentAlignment = Alignment.Center,
     ) {
         Text(
-            text = "Preparing Steply Camera.",
+            text = "Getting Steply ready...",
             style = MaterialTheme.typography.bodyLarge,
         )
     }

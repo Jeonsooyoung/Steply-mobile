@@ -23,7 +23,7 @@ data class RemoteConnectUiState(
     val manualQrValue: String = "",
     val isConnecting: Boolean = false,
     val errorMessage: String? = null,
-    val statusMessage: String = "Scan the QR code on the PC screen to link this profile and camera.",
+    val statusMessage: String = "Scan the QR code on your PC to link this profile and camera.",
     val linkedSession: SteplyWebSessionPayload? = null,
     val latestExercisePlan: RecommendedExercisePlan? = null,
 )
@@ -32,7 +32,7 @@ private data class RemoteConnectActionState(
     val manualQrValue: String = "",
     val isConnecting: Boolean = false,
     val errorMessage: String? = null,
-    val statusMessage: String = "Scan the QR code on the PC screen to link this profile and camera.",
+    val statusMessage: String = "Scan the QR code on your PC to link this profile and camera.",
     val linkedSession: SteplyWebSessionPayload? = null,
 )
 
@@ -94,7 +94,7 @@ class RemoteConnectViewModel(
         if (session == null) {
             actionState.update {
                 it.copy(
-                    errorMessage = "This is not a Steply Web QR code. Scan the QR code from the PC dashboard again.",
+                    errorMessage = "This does not look like a Steply Web QR code. Scan the code from the PC dashboard again.",
                     isConnecting = false,
                 )
             }
@@ -105,7 +105,7 @@ class RemoteConnectViewModel(
             it.copy(
                 isConnecting = true,
                 errorMessage = null,
-                statusMessage = "Linking this profile to the PC session.",
+                statusMessage = "Linking this profile to the PC session...",
             )
         }
 
@@ -119,7 +119,7 @@ class RemoteConnectViewModel(
                         actionState.update {
                             it.copy(
                                 isConnecting = false,
-                                statusMessage = "Linked through ${connectedSession.serverUrl}. You can now stream the phone camera to the PC.",
+                                statusMessage = "Connected to ${connectedSession.serverUrl}. You can now stream the phone camera to your PC.",
                                 linkedSession = connectedSession,
                             )
                         }
@@ -130,7 +130,7 @@ class RemoteConnectViewModel(
                     actionState.update {
                         it.copy(
                             isConnecting = false,
-                            errorMessage = "PC connection failed. Tried:\n$message",
+                            errorMessage = "Could not connect to the PC. Tried:\n$message",
                             statusMessage = "Check that both devices are on the same network and the PC server is running.",
                         )
                     }
@@ -146,7 +146,7 @@ class RemoteConnectViewModel(
     fun startManualCamera(serverUrl: String) {
         val normalized = serverUrl.trim().trimEnd('/')
         if (normalized.isBlank()) {
-            actionState.update { it.copy(errorMessage = "Enter the PC web address. Example: http:///YOUR_PC_IP:3000") }
+            actionState.update { it.copy(errorMessage = "Enter the Steply Web address. Example: http://YOUR_PC_IP:3000") }
             return
         }
         val withScheme = if (normalized.startsWith("http://") || normalized.startsWith("https://")) {

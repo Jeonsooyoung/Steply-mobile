@@ -52,7 +52,7 @@ fun ProfileListScreen(
             },
             text = {
                 Text(
-                    text = "This removes the profile from the chooser. Data deletion is handled separately in Settings.",
+                    text = "This removes the profile from the chooser. Saved history stays on this phone.",
                     style = MaterialTheme.typography.bodyLarge,
                 )
             },
@@ -61,7 +61,7 @@ fun ProfileListScreen(
                     onClick = onConfirmArchive,
                     enabled = !uiState.isWorking,
                 ) {
-                    Text("Hide Profile")
+                    Text("Hide profile")
                 }
             },
             dismissButton = {
@@ -76,8 +76,8 @@ fun ProfileListScreen(
     }
 
     SteplyScaffold(
-        title = "Who is using Steply today?",
-        subtitle = "Choose a local profile to continue.",
+        title = "Profiles",
+        subtitle = "Select the active profile for PC camera checks.",
         onBack = onBack,
     ) { paddingValues ->
         SteplyScreenColumn(paddingValues = paddingValues) {
@@ -87,10 +87,10 @@ fun ProfileListScreen(
 
             if (uiState.profiles.isEmpty()) {
                 EmptyStateCard(
-                    title = "Create your first profile",
-                    message = "Add a name or nickname so Steply can keep movement checks organized.",
+                    title = "Create your first local profile",
+                    message = "Add a name or nickname so Steply can keep movement checks and recommendations organized on this phone.",
                     icon = Icons.Default.Person,
-                    actionText = "Add New Profile",
+                    actionText = "Create profile",
                     onAction = onAddProfile,
                 )
             } else {
@@ -107,7 +107,7 @@ fun ProfileListScreen(
                 }
 
                 SteplyPrimaryButton(
-                    text = "Add Profile",
+                    text = "Add profile",
                     icon = Icons.Default.Add,
                     onClick = onAddProfile,
                 )
@@ -132,6 +132,17 @@ private fun ProfileListItem(
     onEdit: () -> Unit,
     onArchive: () -> Unit,
 ) {
+    val contentColor = if (selected) {
+        MaterialTheme.colorScheme.onPrimaryContainer
+    } else {
+        MaterialTheme.colorScheme.onSurface
+    }
+    val supportingColor = if (selected) {
+        MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.78f)
+    } else {
+        MaterialTheme.colorScheme.onSurfaceVariant
+    }
+
     SteplyCard(
         modifier = Modifier.clickable(onClick = onSelect),
         containerColor = if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface,
@@ -149,15 +160,15 @@ private fun ProfileListItem(
                 Text(
                     text = profile.displayName,
                     style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.onSurface,
+                    color = contentColor,
                 )
                 Text(
-                    text = "Birth year ${profile.birthYear}${profile.heightCm?.let { " · ${it} cm" } ?: ""}",
+                    text = "Birth year ${profile.birthYear}${profile.heightCm?.let { " - ${it} cm" } ?: ""}",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = supportingColor,
                 )
                 StatusChip(
-                    text = if (selected) "Selected" else "Tap to continue",
+                    text = if (selected) "Active profile" else "Tap to select",
                     color = if (selected) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.primaryContainer,
                     contentColor = MaterialTheme.colorScheme.primary,
                 )

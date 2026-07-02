@@ -7,8 +7,17 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -19,7 +28,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.steply.app.ui.screens.components.EmptyStateCard
+import com.steply.app.ui.screens.components.StatusChip
 import com.steply.app.ui.screens.components.SteplyCard
+import com.steply.app.ui.screens.components.SteplySpacing
+import com.steply.app.ui.screens.components.formatRecommendationLevelLabel
 import kotlinx.coroutines.delay
 import org.json.JSONObject
 
@@ -43,17 +56,56 @@ fun RecommendedExerciseMissionList(
     checkedMissionIds: Set<String>,
     onToggleMission: (String) -> Unit,
 ) {
-    val completedCount = plan.exercises.count { it.id in checkedMissionIds }
-    SteplyCard(containerColor = MaterialTheme.colorScheme.primaryContainer) {
-        Text(
-            text = "Recommended Exercises",
-            style = MaterialTheme.typography.headlineSmall,
-            color = MaterialTheme.colorScheme.onSurface,
+    if (plan.exercises.isEmpty()) {
+        EmptyStateCard(
+            title = "No recommended exercises yet",
+            message = "Complete an analysis to receive a personalized plan.",
+            icon = Icons.Default.CheckCircle,
         )
-        Text(
-            text = "${plan.testLabel} - ${plan.recommendationLevel} - $completedCount/${plan.exercises.size} done",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        return
+    }
+
+    val completedCount = plan.exercises.count { it.id in checkedMissionIds }
+    val progress = completedCount.toFloat() / plan.exercises.size.toFloat()
+    val recommendationLabel = formatRecommendationLevelLabel(plan.recommendationLevel)
+
+    SteplyCard(containerColor = MaterialTheme.colorScheme.primaryContainer) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.Top,
+        ) {
+            Icon(
+                imageVector = Icons.Default.CheckCircle,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+            )
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                Text(
+                    text = "Recommended exercises",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                )
+                Text(
+                    text = "${plan.testLabel} - $recommendationLabel",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.78f),
+                )
+            }
+            StatusChip(
+                text = "$completedCount/${plan.exercises.size} done",
+                color = MaterialTheme.colorScheme.surface,
+                contentColor = MaterialTheme.colorScheme.primary,
+            )
+        }
+        LinearProgressIndicator(
+            progress = { progress.coerceIn(0f, 1f) },
+            modifier = Modifier.fillMaxWidth(),
+            color = MaterialTheme.colorScheme.primary,
+            trackColor = MaterialTheme.colorScheme.surface,
         )
     }
 
@@ -104,37 +156,81 @@ private fun MissionCheckCard(
                 )
                 Column(
                     modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
-                    if (isCompleting) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.Top,
+                    ) {
                         Text(
-                            text = "Done",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.primary,
+                            text = "${index + 1}. ${mission.title}",
+                            modifier = Modifier.weight(1f),
+                            style = MaterialTheme.typography.titleLarge,
+                            color = MaterialTheme.colorScheme.onSurface,
                         )
+                        if (isCompleting) {
+                            StatusChip(
+                                text = "Done",
+                                color = MaterialTheme.colorScheme.primaryContainer,
+                                contentColor = MaterialTheme.colorScheme.primary,
+                            )
+                        }
                     }
-                    Text(
-                        text = "${index + 1}. ${mission.title}",
-                        style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.onSurface,
-                    )
                     Text(
                         text = mission.description,
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
-                    Text(
-                        text = "${(mission.durationSeconds / 60).coerceAtLeast(1)} min - Guided",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.primary,
-                    )
-                    Text(
-                        text = mission.safetyNote,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface,
-                    )
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Schedule,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                        )
+                        Text(
+                            text = "Recommended time: ${(mission.durationSeconds / 60).coerceAtLeast(1)} min",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                    }
+                    SafetyNoteSurface(text = mission.safetyNote)
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun SafetyNoteSurface(text: String) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.small,
+        color = MaterialTheme.colorScheme.tertiaryContainer,
+        contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(SteplySpacing.NoticePadding),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.Top,
+        ) {
+            Icon(
+                imageVector = Icons.Default.Warning,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.tertiary,
+                modifier = Modifier.size(20.dp),
+            )
+            Text(
+                text = text,
+                modifier = Modifier.weight(1f),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onTertiaryContainer,
+            )
         }
     }
 }
@@ -156,13 +252,24 @@ fun parseRecommendedExercisePlan(resultJson: String): RecommendedExercisePlan? {
             )
         }
         if (exercises.isEmpty()) return null
+        val rawTestLabel = json.optString("testLabel").takeIf { it.isNotBlank() }
+            ?: json.optString("testType").takeIf { it.isNotBlank() }
+            ?: "Movement Check"
         RecommendedExercisePlan(
-            testLabel = json.optString("testLabel").takeIf { it.isNotBlank() }
-                ?: json.optString("testType").takeIf { it.isNotBlank() }
-                ?: "Movement Check",
+            testLabel = rawTestLabel.toDisplayLabel(),
             recommendationLevel = json.optString("recommendationLevel").takeIf { it.isNotBlank() }
-                ?: "recommended",
+                ?: "Recommended",
             exercises = exercises,
         )
     }.getOrNull()
+}
+
+private fun String.toDisplayLabel(): String {
+    val trimmed = trim()
+    if ('_' !in trimmed && trimmed.any { it.isLowerCase() }) return trimmed
+
+    return trimmed
+        .replace('_', ' ')
+        .lowercase()
+        .replaceFirstChar { char -> char.titlecase() }
 }

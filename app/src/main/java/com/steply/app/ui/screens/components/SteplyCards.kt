@@ -45,6 +45,7 @@ fun SteplyCard(
         shape = RoundedCornerShape(SteplyCorners.Card),
         colors = CardDefaults.cardColors(containerColor = containerColor),
         elevation = CardDefaults.cardElevation(defaultElevation = SteplyElevation.Card),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.24f)),
     ) {
         Column(
             modifier = Modifier.padding(contentPadding),

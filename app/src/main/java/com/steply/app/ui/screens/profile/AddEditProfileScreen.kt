@@ -40,13 +40,13 @@ fun AddEditProfileScreen(
 
     SteplyScaffold(
         title = if (uiState.isEditMode) "Edit Profile" else "Create Profile",
-        subtitle = "Name and birth year are required.",
+        subtitle = "Keep movement history organized on this phone.",
         onBack = onCancel,
     ) { paddingValues ->
         SteplyScreenColumn(paddingValues = paddingValues) {
             if (uiState.isLoading) {
                 Text(
-                    text = "Loading profile details.",
+                    text = "Loading profile details...",
                     style = MaterialTheme.typography.bodyLarge,
                 )
                 return@SteplyScreenColumn
@@ -55,7 +55,7 @@ fun AddEditProfileScreen(
             LocalDataNoticeCard()
 
             SteplyCard {
-                FormSectionTitle("Required Information")
+                FormSectionTitle("Required information")
                 SteplyTextField(
                     value = uiState.displayName,
                     onValueChange = onDisplayNameChanged,
@@ -64,23 +64,16 @@ fun AddEditProfileScreen(
                 SteplyTextField(
                     value = uiState.birthYear,
                     onValueChange = onBirthYearChanged,
-                    label = "Birth Year",
+                    label = "Birth year",
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     supportingText = "Required. Example: 1952",
                 )
             }
 
-            SteplyPrimaryButton(
-                text = if (uiState.isSaving) "Saving" else "Save Profile",
-                icon = Icons.Default.Check,
-                onClick = onSaveProfile,
-                enabled = !uiState.isSaving,
-            )
-
             SteplyCard(containerColor = MaterialTheme.colorScheme.surfaceVariant) {
-                FormSectionTitle("Optional Information")
+                FormSectionTitle("Optional details")
                 Text(
-                    text = "Gender and height are optional. Leave them blank if they are not needed.",
+                    text = "Gender and height are optional. Leave them blank if they are not needed for PC review.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -98,11 +91,11 @@ fun AddEditProfileScreen(
             }
 
             SteplyCard {
-                FormSectionTitle("Movement Notes / Safety Note")
+                FormSectionTitle("Movement and safety notes")
                 SteplyTextField(
                     value = uiState.movementNotes,
                     onValueChange = onMovementNotesChanged,
-                    label = "Movement Notes",
+                    label = "Movement notes",
                     singleLine = false,
                     minHeightDp = 112,
                     supportingText = "Optional notes about balance, support, or daily movement.",
@@ -110,7 +103,7 @@ fun AddEditProfileScreen(
                 SteplyTextField(
                     value = uiState.safetyNote,
                     onValueChange = onSafetyNoteChanged,
-                    label = "Safety Note",
+                    label = "Safety note",
                     singleLine = false,
                     minHeightDp = 112,
                     supportingText = "Optional reminders for safe practice.",
@@ -124,6 +117,13 @@ fun AddEditProfileScreen(
                     style = MaterialTheme.typography.bodyLarge,
                 )
             }
+
+            SteplyPrimaryButton(
+                text = if (uiState.isSaving) "Saving..." else "Save profile",
+                icon = Icons.Default.Check,
+                onClick = onSaveProfile,
+                enabled = !uiState.isSaving,
+            )
 
             SteplySecondaryButton(
                 text = "Cancel",
