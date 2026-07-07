@@ -2,6 +2,7 @@ package com.steply.app.remote
 
 import android.os.Handler
 import android.os.Looper
+import android.os.SystemClock
 import android.util.Log
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -12,6 +13,7 @@ import okio.ByteString.Companion.toByteString
 import org.json.JSONObject
 
 private const val MAX_PENDING_BYTES = 1_500_000L
+private const val MAX_FRAME_AGE_MS = 500L
 
 /**
  * Sends JPEG camera frames from Android to the local Steply PC WebSocket server.
@@ -79,7 +81,11 @@ class RemoteCameraStreamer(
         )
     }
 
-    fun sendJpeg(bytes: ByteArray): Boolean {
+    fun sendJpeg(
+        bytes: ByteArray,
+        capturedAtMs: Long = SystemClock.uptimeMillis(),
+        maxFrameAgeMs: Long = MAX_FRAME_AGE_MS,
+    ): Boolean {
         val socket = webSocket
         Log.d(
             "RemoteCamera",
@@ -88,6 +94,10 @@ class RemoteCameraStreamer(
 
         if (socket == null) return false
         if (!connected) return false
+        if (SystemClock.uptimeMillis() - capturedAtMs > maxFrameAgeMs) {
+            Log.w("RemoteCamera", "dropping stale frame before websocket send")
+            return false
+        }
 
         // Avoid piling up stale frames. If the network cannot keep up, drop this frame
         // and let CameraX provide the latest one on the next analyzer callback.

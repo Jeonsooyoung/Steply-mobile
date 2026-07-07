@@ -2,6 +2,7 @@ package com.steply.app.ui.screens.remote
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -19,6 +20,7 @@ import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.VideoLibrary
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Icon
@@ -26,6 +28,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -82,20 +85,40 @@ fun RemoteCameraScreen(
     var resultSaved by remember { mutableStateOf(false) }
     var showExerciseMissions by remember { mutableStateOf(false) }
     var checkedMissionIds by remember { mutableStateOf<Set<String>>(emptySet()) }
+    var selectedVideoUri by remember(session.webSocketUrl) { mutableStateOf<Uri?>(null) }
+    var streamSource by remember(session.webSocketUrl) { mutableStateOf(StreamSource.Camera) }
+    var startPickedVideoStream by remember(session.webSocketUrl) { mutableStateOf(false) }
+    val videoPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent(),
+    ) { uri ->
+        if (uri != null) {
+            selectedVideoUri = uri
+            startPickedVideoStream = true
+        }
+    }
 
     fun stopStreaming() {
         streamer?.close()
         streamer = null
         streaming = false
-        statusMessage = "Camera stream stopped."
+        statusMessage = if (streamSource == StreamSource.DemoVideo) {
+            "Demo video stream stopped."
+        } else {
+            "Camera stream stopped."
+        }
     }
 
-    fun startStreaming() {
-        if (!hasCameraPermission) {
+    fun startStreaming(source: StreamSource) {
+        if (source == StreamSource.Camera && !hasCameraPermission) {
             permissionLauncher.launch(Manifest.permission.CAMERA)
             return
         }
+        if (source == StreamSource.DemoVideo && selectedVideoUri == null) {
+            videoPickerLauncher.launch("video/*")
+            return
+        }
         streamer?.close()
+        streamSource = source
         resultSaved = false
         finalResultReceived = false
         latestExercisePlan = null
@@ -133,8 +156,19 @@ fun RemoteCameraScreen(
         streamer = newStreamer
         streaming = true
         sentFrames = 0
-        statusMessage = "Connecting to Steply Web: ${session.webSocketUrl}"
+        statusMessage = if (source == StreamSource.DemoVideo) {
+            "Connecting demo video stream to Steply Web: ${session.webSocketUrl}"
+        } else {
+            "Connecting to Steply Web: ${session.webSocketUrl}"
+        }
         newStreamer.connect()
+    }
+
+    LaunchedEffect(startPickedVideoStream, selectedVideoUri) {
+        if (startPickedVideoStream && selectedVideoUri != null) {
+            startPickedVideoStream = false
+            startStreaming(StreamSource.DemoVideo)
+        }
     }
 
     DisposableEffect(session.webSocketUrl) {
@@ -155,7 +189,19 @@ fun RemoteCameraScreen(
                 savedHistoryCount = savedHistoryCount,
             )
 
-            if (hasCameraPermission) {
+            if (streamSource == StreamSource.DemoVideo && selectedVideoUri != null) {
+                DemoVideoPreviewCard(
+                    videoUri = selectedVideoUri,
+                    streamer = streamer,
+                    streaming = streaming,
+                    videoMessage = cameraMessage,
+                    onVideoStatus = { cameraMessage = it },
+                    onVideoError = { cameraMessage = it },
+                    onFrameSent = {
+                        if (streaming && !resultSaved) sentFrames += 1
+                    },
+                )
+            } else if (hasCameraPermission) {
                 CameraPreviewCard(
                     streamer = streamer,
                     streaming = streaming,
@@ -172,7 +218,7 @@ fun RemoteCameraScreen(
                 )
             }
 
-            if (hasCameraPermission && (!finalResultReceived || streaming)) {
+            if (!finalResultReceived || streaming) {
                 if (streaming) {
                     SteplyDestructiveButton(
                         text = "Stop streaming",
@@ -183,7 +229,12 @@ fun RemoteCameraScreen(
                     SteplyPrimaryButton(
                         text = "Start camera stream",
                         icon = Icons.Default.PlayArrow,
-                        onClick = ::startStreaming,
+                        onClick = { startStreaming(StreamSource.Camera) },
+                    )
+                    SteplySecondaryButton(
+                        text = "Start demo video",
+                        icon = Icons.Default.VideoLibrary,
+                        onClick = { videoPickerLauncher.launch("video/*") },
                     )
                 }
             }
@@ -237,6 +288,11 @@ fun RemoteCameraScreen(
             }
         }
     }
+}
+
+private enum class StreamSource {
+    Camera,
+    DemoVideo,
 }
 
 @Composable
@@ -432,6 +488,57 @@ private fun CameraPreviewCard(
         )
         Text(
             text = cameraMessage,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
+@Composable
+private fun DemoVideoPreviewCard(
+    videoUri: Uri?,
+    streamer: RemoteCameraStreamer?,
+    streaming: Boolean,
+    videoMessage: String,
+    onVideoStatus: (String) -> Unit,
+    onVideoError: (String) -> Unit,
+    onFrameSent: () -> Unit,
+) {
+    SteplyCard {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = "Demo video preview",
+                modifier = Modifier.weight(1f),
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+            StatusChip(
+                text = if (streaming) "Demo" else "Ready",
+                color = if (streaming) {
+                    MaterialTheme.colorScheme.primaryContainer
+                } else {
+                    MaterialTheme.colorScheme.surfaceVariant
+                },
+                contentColor = if (streaming) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                },
+            )
+        }
+        GalleryVideoStreamPreview(
+            videoUri = videoUri,
+            remoteCameraStreamer = streamer,
+            onVideoStatus = onVideoStatus,
+            onVideoError = onVideoError,
+            onFrameSent = onFrameSent,
+        )
+        Text(
+            text = videoMessage,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )

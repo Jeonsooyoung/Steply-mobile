@@ -117,9 +117,10 @@ fun CameraStreamPreview(
                             val now = SystemClock.uptimeMillis()
                             if (now - lastRemoteFrameSentAt >= REMOTE_CAMERA_FRAME_INTERVAL_MS) {
                                 lastRemoteFrameSentAt = now
+                                val capturedAtMs = SystemClock.uptimeMillis()
                                 val jpegBytes = imageProxy.toRotatedJpegBytes(useFrontCamera = useFrontCamera)
                                 val activeStreamer = remoteCameraStreamer
-                                val sent = activeStreamer?.sendJpeg(jpegBytes) == true
+                                val sent = activeStreamer?.sendJpeg(jpegBytes, capturedAtMs = capturedAtMs) == true
                                 if (sent) {
                                     mainHandler.post { currentOnFrameSent() }
                                 } else if (activeStreamer != null && now - lastSendFailureReportedAt >= SEND_FAILURE_REPORT_INTERVAL_MS) {
