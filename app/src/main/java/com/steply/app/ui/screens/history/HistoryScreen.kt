@@ -102,21 +102,16 @@ fun HistoryScreen(
                         },
                     )
                     HistoryOverviewTrends(
-                        standingItems = groupedItems[HistoryTestCategory.STANDING].orEmpty(),
+                        balanceItems = groupedItems[HistoryTestCategory.BALANCE].orEmpty(),
                         chairStandItems = groupedItems[HistoryTestCategory.CHAIR_STAND].orEmpty(),
-                        tugItems = groupedItems[HistoryTestCategory.TUG].orEmpty(),
                     )
                     HistoryTestSection(
-                        title = "Standing",
-                        items = groupedItems[HistoryTestCategory.STANDING].orEmpty(),
+                        title = "4-Stage Balance",
+                        items = groupedItems[HistoryTestCategory.BALANCE].orEmpty(),
                     )
                     HistoryTestSection(
-                        title = "Chair Stand",
+                        title = "30 sec Chair Stand",
                         items = groupedItems[HistoryTestCategory.CHAIR_STAND].orEmpty(),
-                    )
-                    HistoryTestSection(
-                        title = "TUG",
-                        items = groupedItems[HistoryTestCategory.TUG].orEmpty(),
                     )
                     HistoryTestSection(
                         title = "Other",
@@ -231,9 +226,8 @@ private fun shareWeeklyReport(
 
 @Composable
 private fun HistoryOverviewTrends(
-    standingItems: List<MovementHistory>,
+    balanceItems: List<MovementHistory>,
     chairStandItems: List<MovementHistory>,
-    tugItems: List<MovementHistory>,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Text(
@@ -242,9 +236,8 @@ private fun HistoryOverviewTrends(
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onSurface,
         )
-        HistoryTrendCard(category = HistoryTestCategory.STANDING, items = standingItems)
+        HistoryTrendCard(category = HistoryTestCategory.BALANCE, items = balanceItems)
         HistoryTrendCard(category = HistoryTestCategory.CHAIR_STAND, items = chairStandItems)
-        HistoryTrendCard(category = HistoryTestCategory.TUG, items = tugItems)
     }
 }
 
@@ -290,8 +283,8 @@ private fun HistoryTrendCard(
     val isImproving = delta > 0
     val isWorsening = delta < 0
     val trendColor = when {
-        isImproving -> Color(0xFF1B8F3A)
-        isWorsening -> Color(0xFFC62828)
+        isImproving -> Color(0xFF13A88E)
+        isWorsening -> Color(0xFFBA1A1A)
         else -> MaterialTheme.colorScheme.onSurfaceVariant
     }
     val comparison = items.trendComparison(category)
@@ -316,7 +309,7 @@ private fun HistoryTrendCard(
                         color = MaterialTheme.colorScheme.onSurface,
                     )
                     Text(
-                        text = "최근 5회 기준",
+                        text = "Last 5 results",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -325,7 +318,7 @@ private fun HistoryTrendCard(
                     text = when {
                         isImproving -> "+$delta"
                         isWorsening -> delta.toString()
-                        else -> "변화 없음"
+                        else -> "No change"
                     },
                     color = trendColor,
                 )
@@ -341,9 +334,9 @@ private fun HistoryTrendCard(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
-                TrendStat(label = "첫 기록", value = firstValue.toString())
-                TrendStat(label = "최신", value = latestValue.toString())
-                TrendStat(label = "변화", value = if (delta > 0) "+$delta" else delta.toString())
+                TrendStat(label = "First", value = firstValue.toString())
+                TrendStat(label = "Latest", value = latestValue.toString())
+                TrendStat(label = "Change", value = if (delta > 0) "+$delta" else delta.toString())
             }
 
             comparison?.let {
@@ -384,8 +377,8 @@ private fun SparklineChart(
             val startY = chartHeight - ((previousPoint.value - minValue).toFloat() / range.toFloat() * chartHeight)
             val endY = chartHeight - ((currentPoint.value - minValue).toFloat() / range.toFloat() * chartHeight)
             val segmentColor = when {
-                currentPoint.value > previousPoint.value && positiveByIncrease -> Color(0xFF1B8F3A)
-                currentPoint.value < previousPoint.value && positiveByIncrease -> Color(0xFFC62828)
+                currentPoint.value > previousPoint.value && positiveByIncrease -> Color(0xFF13A88E)
+                currentPoint.value < previousPoint.value && positiveByIncrease -> Color(0xFFBA1A1A)
                 else -> lineColor
             }
 
@@ -461,9 +454,8 @@ private data class HistoryTrendPoint(
 )
 
 private enum class HistoryTestCategory {
-    STANDING,
+    BALANCE,
     CHAIR_STAND,
-    TUG,
     OTHER,
 }
 
@@ -475,12 +467,14 @@ private fun MovementHistory.historyTestCategory(): HistoryTestCategory {
         .orEmpty()
 
     return when {
-        normalized.contains("standing") -> HistoryTestCategory.STANDING
-        normalized.contains("posture") -> HistoryTestCategory.STANDING
+        // 30-second chair stand (checked first so "chair stand" never falls through to balance).
         normalized.contains("chair") -> HistoryTestCategory.CHAIR_STAND
         normalized.contains("stand up") -> HistoryTestCategory.CHAIR_STAND
-        normalized.contains("tug") -> HistoryTestCategory.TUG
-        normalized.contains("timed up and go") -> HistoryTestCategory.TUG
+        // 4-stage balance (PC test type "four_stage_balance", plus legacy standing/posture/balance names).
+        normalized.contains("four stage") -> HistoryTestCategory.BALANCE
+        normalized.contains("balance") -> HistoryTestCategory.BALANCE
+        normalized.contains("standing") -> HistoryTestCategory.BALANCE
+        normalized.contains("posture") -> HistoryTestCategory.BALANCE
         else -> HistoryTestCategory.OTHER
     }
 }
@@ -491,8 +485,7 @@ private fun MovementHistory.trendMetricValue(category: HistoryTestCategory): Int
     // those remain the PC web analysis responsibility.
     return when (category) {
         HistoryTestCategory.CHAIR_STAND -> repetitionCount ?: score
-        HistoryTestCategory.TUG -> score ?: durationSeconds
-        HistoryTestCategory.STANDING -> score ?: durationSeconds
+        HistoryTestCategory.BALANCE -> score ?: durationSeconds
         HistoryTestCategory.OTHER -> score ?: repetitionCount ?: durationSeconds
     }
 }
@@ -503,18 +496,16 @@ private fun HistoryTestCategory.isPositiveDisplayDirectionByIncrease(): Boolean 
 
 private fun HistoryTestCategory.trendTitle(): String {
     return when (this) {
-        HistoryTestCategory.STANDING -> "최근 점수 추세"
-        HistoryTestCategory.CHAIR_STAND -> "최근 반복 횟수 추세"
-        HistoryTestCategory.TUG -> "최근 점수 추세"
-        HistoryTestCategory.OTHER -> "최근 추세"
+        HistoryTestCategory.BALANCE -> "Recent hold-time trend"
+        HistoryTestCategory.CHAIR_STAND -> "Recent repetition trend"
+        HistoryTestCategory.OTHER -> "Recent trend"
     }
 }
 
 private fun HistoryTestCategory.displayName(): String {
     return when (this) {
-        HistoryTestCategory.STANDING -> "Standing"
-        HistoryTestCategory.CHAIR_STAND -> "Chair Stand"
-        HistoryTestCategory.TUG -> "TUG"
+        HistoryTestCategory.BALANCE -> "4-Stage Balance"
+        HistoryTestCategory.CHAIR_STAND -> "30 sec Chair Stand"
         HistoryTestCategory.OTHER -> "Other"
     }
 }
@@ -525,14 +516,14 @@ private fun TrendComparisonBanner(
     comparison: TrendComparison,
 ) {
     val color = when {
-        comparison.delta > 0 -> Color(0xFF1B8F3A)
-        comparison.delta < 0 -> Color(0xFFC62828)
+        comparison.delta > 0 -> Color(0xFF13A88E)
+        comparison.delta < 0 -> Color(0xFFBA1A1A)
         else -> MaterialTheme.colorScheme.onSurfaceVariant
     }
     val comparisonText = when {
-        comparison.delta > 0 -> "최근 3일 저장 점수 평균이 이전 3일보다 올랐어요."
-        comparison.delta < 0 -> "최근 3일 저장 점수 평균이 이전 3일보다 낮아졌어요."
-        else -> "최근 3일 저장 점수 평균이 이전 3일과 같아요."
+        comparison.delta > 0 -> "The last 3 days average higher than the 3 days before."
+        comparison.delta < 0 -> "The last 3 days average lower than the 3 days before."
+        else -> "The last 3 days average the same as the 3 days before."
     }
 
     Surface(
@@ -546,7 +537,7 @@ private fun TrendComparisonBanner(
             verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             Text(
-                text = "${category.displayName()} 3일 평균 비교",
+                text = "${category.displayName()} · 3-day average",
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.SemiBold,
                 color = color,
@@ -557,7 +548,7 @@ private fun TrendComparisonBanner(
                 color = color,
             )
             Text(
-                text = "최근 3일 평균 ${comparison.recentAverageText()} · 이전 3일 평균 ${comparison.previousAverageText()}",
+                text = "Last 3 days ${comparison.recentAverageText()} · Previous 3 days ${comparison.previousAverageText()}",
                 style = MaterialTheme.typography.bodySmall,
                 color = color,
             )
@@ -583,13 +574,13 @@ private fun TrendComparisonFallbackBanner(category: HistoryTestCategory) {
             verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             Text(
-                text = "${category.displayName()} 평균 비교",
+                text = "${category.displayName()} · average comparison",
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Text(
-                text = "비교할 기록이 아직 부족해요.",
+                text = "Not enough results to compare yet.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -669,7 +660,7 @@ private fun TrendComparison.previousAverageText(): String {
     return String.format(Locale.US, "%.1f", previousAverage)
 }
 
-private const val DisplayTrendNotice = "표시용 산술 추세이며 임상 판정이 아니에요."
+private const val DisplayTrendNotice = "For reference only — a simple trend, not a clinical assessment."
 
 @Composable
 private fun HistoryItemCard(item: MovementHistory) {

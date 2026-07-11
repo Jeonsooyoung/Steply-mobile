@@ -137,9 +137,8 @@ object WeeklyReportFormatter {
 }
 
 private enum class WeeklyReportCategory(val displayName: String) {
-    STANDING("Standing"),
-    CHAIR_STAND("Chair Stand"),
-    TUG("TUG"),
+    BALANCE("4-Stage Balance"),
+    CHAIR_STAND("30 sec Chair Stand"),
     OTHER("Other"),
 }
 
@@ -151,12 +150,12 @@ private fun MovementHistory.category(): WeeklyReportCategory {
         .orEmpty()
 
     return when {
-        normalized.contains("standing") -> WeeklyReportCategory.STANDING
-        normalized.contains("posture") -> WeeklyReportCategory.STANDING
         normalized.contains("chair") -> WeeklyReportCategory.CHAIR_STAND
         normalized.contains("stand up") -> WeeklyReportCategory.CHAIR_STAND
-        normalized.contains("tug") -> WeeklyReportCategory.TUG
-        normalized.contains("timed up and go") -> WeeklyReportCategory.TUG
+        normalized.contains("four stage") -> WeeklyReportCategory.BALANCE
+        normalized.contains("balance") -> WeeklyReportCategory.BALANCE
+        normalized.contains("standing") -> WeeklyReportCategory.BALANCE
+        normalized.contains("posture") -> WeeklyReportCategory.BALANCE
         else -> WeeklyReportCategory.OTHER
     }
 }
@@ -164,8 +163,7 @@ private fun MovementHistory.category(): WeeklyReportCategory {
 private fun MovementHistory.displayMetricValue(category: WeeklyReportCategory): Int? {
     return when (category) {
         WeeklyReportCategory.CHAIR_STAND -> repetitionCount ?: score
-        WeeklyReportCategory.TUG -> score ?: durationSeconds
-        WeeklyReportCategory.STANDING -> score ?: durationSeconds
+        WeeklyReportCategory.BALANCE -> score ?: durationSeconds
         WeeklyReportCategory.OTHER -> score ?: repetitionCount ?: durationSeconds
     }
 }

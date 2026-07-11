@@ -3,12 +3,15 @@ package com.steply.app.ui.screens.components
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
-val SteplyDeepTeal = Color(0xFF2F6F62)
-val SteplyAccentOrange = Color(0xFFD9822B)
-val SteplyWarmAmber = Color(0xFFB7791F)
-val SteplySuccessGreen = Color(0xFF2E7D58)
-val SteplySoftBlue = Color(0xFF496A9A)
-val SteplyWarmCream = Color(0xFFF7F9F6)
+// Brand constants aligned with the Steply web design tokens
+// (client/src/styles/tokens.css) for parity between phone and PC surfaces.
+val SteplyBrandTeal = Color(0xFF18BFA6)
+val SteplyDeepTeal = Color(0xFF087765)
+val SteplyAccentLime = Color(0xFFC8DC3E)
+val SteplyWarmAmber = Color(0xFFA06F00)
+val SteplySuccessGreen = Color(0xFF13A88E)
+val SteplySoftBlue = Color(0xFF4F7F98)
+val SteplyWarmCream = Color(0xFFF6FFFB)
 
 object SteplySpacing {
     val ExtraSmallGap = 4.dp
@@ -26,9 +29,11 @@ object SteplySpacing {
     val ChipVertical = 6.dp
 }
 
+// Radii mirror the web tokens: --radius-card 8, --radius-button 16,
+// --radius-input 12, --radius-notice 8.
 object SteplyCorners {
     val Card = 8.dp
-    val Button = 14.dp
+    val Button = 16.dp
     val Field = 12.dp
     val Notice = 8.dp
 }
